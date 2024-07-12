@@ -1,6 +1,6 @@
 # s3-select-rust-example
 
-sh```
+```sh
 AWS_PROFILE=[xxxxxx] \                                                                                               ?[main]
 BUCKET_NAME=[yyyyyy] \
 OBJECT_KEY=[zzzzzzz] \
