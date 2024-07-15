@@ -8,10 +8,11 @@ use aws_sdk_s3::{
     Client,
 };
 use serde::{de::IgnoredAny, Deserialize};
+use serde_json::from_str;
 
 #[derive(Deserialize, Debug)]
 pub struct Record {
-    pub id: String,
+    pub id: i32,
     pub name: String,
 }
 
@@ -19,11 +20,11 @@ type AppError = Box<dyn Error>;
 
 fn parse_line_bufferd(buf: &mut String, line: &str) -> Result<Option<Record>, AppError> {
     if buf.is_empty() && is_valid_json(line) {
-        Ok(Some(serde_json::from_str(line)?))
+        Ok(Some(from_str(line)?))
     } else {
         buf.push_str(line);
         if is_valid_json(&buf) {
-            let record = serde_json::from_str(buf)?;
+            let record = from_str(buf)?;
             buf.clear();
             Ok(Some(record))
         } else {
@@ -33,7 +34,7 @@ fn parse_line_bufferd(buf: &mut String, line: &str) -> Result<Option<Record>, Ap
 }
 
 fn is_valid_json(data: impl AsRef<str>) -> bool {
-    serde_json::from_str::<IgnoredAny>(data.as_ref()).is_ok()
+    from_str::<IgnoredAny>(data.as_ref()).is_ok()
 }
 
 async fn handler(client: &Client) -> Result<Vec<Record>, AppError> {
@@ -51,7 +52,7 @@ async fn handler(client: &Client) -> Result<Vec<Record>, AppError> {
         .bucket(bucket_name)
         .key(object_key)
         .expression_type(aws_sdk_s3::types::ExpressionType::Sql)
-        .expression("SELECT * FROM s3object s WHERE s.id = 'aaaa'")
+        .expression("SELECT * FROM s3object s WHERE s.name LIKE '%b%'")
         .input_serialization(
             InputSerialization::builder()
                 .json(
